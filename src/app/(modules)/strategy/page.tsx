@@ -1,23 +1,151 @@
-import { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Strategy | Mark1',
-  description: 'Strategic planning and management',
-};
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { buildStrategyPrompt } from './utils/StrategyPromptBuilder';
 
 /**
- * Strategy page
+ * Strategy page with a form to collect business strategy information
  */
 export default function StrategyPage() {
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    name: '',
+    businessType: '',
+    objectives: '',
+    audience: '',
+    differentiation: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      // Build the LLM prompt using the utility
+      const prompt = buildStrategyPrompt(formData);
+      
+      // For now, we'll just log the prompt
+      console.log('Generated Prompt:', prompt);
+      
+      // Here you would typically send the prompt to an API endpoint
+      // that would forward it to an LLM service
+      
+      // Navigate to a results page or show results inline
+      // router.push('/strategy/results');
+      
+      alert('Strategy information submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting strategy information:', error);
+      alert('Failed to submit strategy information. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8">Strategy</h1>
-      <p className="text-center mb-8 text-gray-600">Plan and manage your strategies effectively</p>
+      <h1 className="text-3xl font-bold text-center mb-8">Strategy Builder</h1>
+      <p className="text-center mb-8 text-gray-600">
+        Answer the questions below to help us create a customized strategy for your business
+      </p>
       
-      <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-        <p className="text-center text-gray-500">
-          Strategic planning features coming soon...
-        </p>
+      <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              1. What is your name?
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="businessType" className="block text-sm font-medium text-gray-700 mb-1">
+              2. What type of business do you have?
+            </label>
+            <input
+              type="text"
+              id="businessType"
+              name="businessType"
+              value={formData.businessType}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="objectives" className="block text-sm font-medium text-gray-700 mb-1">
+              3. What are your primary objectives?
+            </label>
+            <textarea
+              id="objectives"
+              name="objectives"
+              value={formData.objectives}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="audience" className="block text-sm font-medium text-gray-700 mb-1">
+              4. Who is your target audience(s)?
+            </label>
+            <textarea
+              id="audience"
+              name="audience"
+              value={formData.audience}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="differentiation" className="block text-sm font-medium text-gray-700 mb-1">
+              5. What differentiates your service?
+            </label>
+            <textarea
+              id="differentiation"
+              name="differentiation"
+              value={formData.differentiation}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          
+          <div className="flex justify-center">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-300"
+            >
+              {isSubmitting ? 'Generating Strategy...' : 'Generate Strategy'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
