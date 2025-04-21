@@ -18,15 +18,44 @@ export default function StrategyPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<{ text: string | null, error: string | null } | null>(null);
-  const [parsedHtml, setParsedHtml] = useState<string | null>(null);
+  const [parsedMatrix, setParsedMatrix] = useState<string | null>(null);
+  const [explanation, setExplanation] = useState<string | null>(null);
+  const [isExplanationOpen, setIsExplanationOpen] = useState(false);
 
   // Parse the markdown response to HTML when result changes
   useEffect(() => {
     if (result?.text) {
-      const html = marked.parse(result.text);
-      setParsedHtml(html as string);
+      // Split the content - matrix is before explanation, which typically follows a blank line after the table
+      const parts = result.text.split(/\n\n/);
+      let matrixContent = '';
+      let explanationContent = '';
+      
+      // Find where the table ends and explanation begins
+      let foundTable = false;
+      
+      for (let i = 0; i < parts.length; i++) {
+        if (!foundTable && parts[i].includes('|')) {
+          foundTable = true;
+          matrixContent += parts[i] + '\n\n';
+        } else if (foundTable) {
+          explanationContent += parts[i] + '\n\n';
+        } else {
+          matrixContent += parts[i] + '\n\n';
+        }
+      }
+
+      // If there's an explanation, make sure it's clean
+      if (explanationContent.trim()) {
+        setExplanation(marked.parse(explanationContent) as string);
+      } else {
+        setExplanation(null);
+      }
+
+      // Set the matrix content
+      setParsedMatrix(marked.parse(matrixContent) as string);
     } else {
-      setParsedHtml(null);
+      setParsedMatrix(null);
+      setExplanation(null);
     }
   }, [result]);
 
@@ -42,7 +71,8 @@ export default function StrategyPage() {
     e.preventDefault();
     setIsSubmitting(true);
     setResult(null);
-    setParsedHtml(null);
+    setParsedMatrix(null);
+    setExplanation(null);
     
     try {
       // Build the LLM prompt using the utility
@@ -61,6 +91,10 @@ export default function StrategyPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const toggleExplanation = () => {
+    setIsExplanationOpen(!isExplanationOpen);
   };
 
   return (
@@ -182,7 +216,7 @@ export default function StrategyPage() {
             <div className="p-4 bg-red-100 text-red-700 rounded-md">
               {result.error}
             </div>
-          ) : parsedHtml ? (
+          ) : parsedMatrix ? (
             <div className="strategy-matrix">
               <style jsx>{`
                 .strategy-matrix table {
@@ -224,11 +258,73 @@ export default function StrategyPage() {
                 .strategy-matrix ul li, .strategy-matrix ol li {
                   margin: 0.25rem 0;
                 }
+                .accordion-button {
+                  display: flex;
+                  align-items: center;
+                  width: 100%;
+                  padding: 0.75rem 1rem;
+                  margin-top: 1rem;
+                  background-color: #f3f4f6;
+                  border: 1px solid #e5e7eb;
+                  border-radius: 0.375rem;
+                  font-weight: 600;
+                  text-align: left;
+                  transition: all 0.2s ease;
+                  cursor: pointer;
+                }
+                .accordion-button:hover {
+                  background-color: #e5e7eb;
+                }
+                .accordion-button svg {
+                  margin-right: 0.5rem;
+                  transition: transform 0.2s ease;
+                }
+                .accordion-button.open svg {
+                  transform: rotate(90deg);
+                }
+                .accordion-content {
+                  max-height: 0;
+                  overflow: hidden;
+                  transition: max-height 0.3s ease;
+                }
+                .accordion-content.open {
+                  max-height: 1000px;
+                }
               `}</style>
               <div 
                 className="prose max-w-none"
-                dangerouslySetInnerHTML={{ __html: parsedHtml }} 
+                dangerouslySetInnerHTML={{ __html: parsedMatrix }} 
               />
+
+              {explanation && (
+                <div className="mt-4">
+                  <button 
+                    onClick={toggleExplanation}
+                    className={`accordion-button ${isExplanationOpen ? 'open' : ''}`}
+                    aria-expanded={isExplanationOpen}
+                  >
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      className="h-5 w-5" 
+                      viewBox="0 0 20 20" 
+                      fill="currentColor"
+                    >
+                      <path 
+                        fillRule="evenodd" 
+                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" 
+                        clipRule="evenodd" 
+                      />
+                    </svg>
+                    <span>View Explanation</span>
+                  </button>
+                  <div className={`accordion-content ${isExplanationOpen ? 'open' : ''}`}>
+                    <div 
+                      className="p-4 border border-t-0 border-gray-200 rounded-b prose max-w-none"
+                      dangerouslySetInnerHTML={{ __html: explanation }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="p-4 bg-gray-100 text-gray-500 rounded-md">
