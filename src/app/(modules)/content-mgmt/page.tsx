@@ -2,12 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { fetchStrategies, Strategy } from './utils/contentService';
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Content Management | Mark1',
-  description: 'Content management system',
-};
 
 /**
  * Content Management page component
