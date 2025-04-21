@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { generateSocialPost, saveSocialPost, fetchSocialPosts } from '../utils/socialMediaService';
 import { SocialMediaPost } from '../utils/types';
 
@@ -21,8 +21,13 @@ export default function SocialMediaGenerator({ strategyId, contentPlanId, isVisi
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [showSavedPosts, setShowSavedPosts] = useState<boolean>(false);
 
-  // Don't render if not visible or no content plan
-  if (!isVisible || !contentPlanId) {
+  // Use useEffect to log when the component is mounted for debugging
+  useEffect(() => {
+    console.log('SocialMediaGenerator mounted with contentPlanId:', contentPlanId);
+  }, [contentPlanId]);
+
+  // Don't render if no content plan
+  if (!contentPlanId) {
     return null;
   }
 

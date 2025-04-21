@@ -233,6 +233,7 @@ export default function ContentManagementPage() {
         // Safe check if data exists before accessing its properties
         if (result.data) {
           setSavedContentPlanId(result.data.id);
+          console.log('Content plan saved with ID:', result.data.id);
         }
       } else {
         throw new Error(result.error || 'Failed to save content plan');
@@ -352,6 +353,9 @@ export default function ContentManagementPage() {
                   savePlanMessage.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
                 }`}>
                   {savePlanMessage.text}
+                  {savePlanMessage.type === 'success' && savedContentPlanId && (
+                    <span className="ml-2">(Plan ID: {savedContentPlanId})</span>
+                  )}
                 </div>
               )}
               
@@ -364,11 +368,12 @@ export default function ContentManagementPage() {
         </div>
       )}
       
-      {selectedStrategy && (
+      {/* Social Media Generator Section */}
+      {selectedStrategy && savedContentPlanId && (
         <SocialMediaGenerator 
           strategyId={selectedStrategyId}
           contentPlanId={savedContentPlanId}
-          isVisible={!!savedContentPlanId && savePlanMessage?.type === 'success'}
+          isVisible={true}
         />
       )}
       
