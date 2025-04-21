@@ -9,11 +9,11 @@ import { generateStrategy } from './utils/strategyLlmClient';
  */
 export default function StrategyPage() {
   const [formData, setFormData] = useState({
-    name: 'John Smith',
-    businessType: 'Digital Marketing Agency',
-    objectives: 'Increase client base by 30% in the next year, improve client retention, and expand service offerings to include social media management.',
-    audience: 'Small to medium-sized businesses in the tech and retail sectors, typically with 10-50 employees and annual revenue between $1-5 million.',
-    differentiation: 'Data-driven approach with weekly performance reports, specialized in conversion optimization, and offering a 90-day results guarantee.'
+    name: 'Sarah Johnson',
+    businessType: 'Personal Fitness Training Business',
+    objectives: 'Grow client base by 25% in the next 6 months, launch an online training program, and increase client retention through personalized fitness plans.',
+    audience: 'Adults aged 30-55 who are busy professionals, want to improve their health and fitness, have disposable income for personalized training, and prefer flexible scheduling options.',
+    differentiation: 'Specialized in nutrition-integrated fitness plans, certified in pre/post-natal training, offering both in-person and virtual sessions, and providing monthly fitness assessments to track progress.'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<{ text: string | null, error: string | null } | null>(null);
