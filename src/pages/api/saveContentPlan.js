@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Initialize Supabase client
+    // Initialize Supabase client with anon key since service role key is not available
     const supabase = createServerSupabaseClient();
 
     // If no user_id was provided, try to get the strategy's user_id
