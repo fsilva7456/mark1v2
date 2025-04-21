@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { marked } from 'marked';
 import { buildStrategyPrompt } from './utils/StrategyPromptBuilder';
 import { generateStrategy } from './utils/strategyLlmClient';
@@ -21,6 +21,34 @@ export default function StrategyPage() {
   const [parsedMatrix, setParsedMatrix] = useState<string | null>(null);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [isExplanationOpen, setIsExplanationOpen] = useState(false);
+  const matrixRef = useRef<HTMLDivElement>(null);
+
+  // Apply styling to the matrix table after render
+  useEffect(() => {
+    if (matrixRef.current && parsedMatrix) {
+      const tableElement = matrixRef.current.querySelector('table');
+      
+      if (tableElement) {
+        // Add class to table
+        tableElement.classList.add('matrix-table');
+        
+        // Get all th elements and add class
+        const thElements = tableElement.querySelectorAll('th');
+        thElements.forEach(th => {
+          th.classList.add('matrix-header');
+        });
+        
+        // Get all td elements in first column and add class
+        const rows = tableElement.querySelectorAll('tr');
+        rows.forEach(row => {
+          const firstCell = row.querySelector('td:first-child');
+          if (firstCell) {
+            firstCell.classList.add('audience-column');
+          }
+        });
+      }
+    }
+  }, [parsedMatrix]);
 
   // Parse the markdown response to HTML when result changes
   useEffect(() => {
@@ -210,7 +238,7 @@ export default function StrategyPage() {
       {/* Result display section */}
       {result && (
         <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-4">Your Audience Targeting Matrix</h2>
+          <h2 className="text-2xl font-bold mb-4 text-center text-blue-700">Your Audience Targeting Matrix</h2>
           
           {result.error ? (
             <div className="p-4 bg-red-100 text-red-700 rounded-md">
@@ -218,8 +246,8 @@ export default function StrategyPage() {
             </div>
           ) : parsedMatrix ? (
             <div className="strategy-matrix">
-              <style jsx>{`
-                .strategy-matrix table {
+              <style jsx global>{`
+                .matrix-table {
                   width: 100%;
                   border-collapse: collapse;
                   margin: 1.5rem 0;
@@ -227,44 +255,45 @@ export default function StrategyPage() {
                   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
                   border-radius: 0.5rem;
                   overflow: hidden;
+                  border: none;
                 }
-                .strategy-matrix table th {
-                  background-color: #3b82f6;
-                  color: white;
-                  font-weight: 600;
-                  text-align: left;
-                  padding: 1rem;
-                  border: 1px solid #60a5fa;
-                  text-transform: uppercase;
-                  letter-spacing: 0.05em;
-                  font-size: 0.85rem;
+                .matrix-table th, .matrix-header {
+                  background-color: #3b82f6 !important;
+                  color: white !important;
+                  font-weight: 600 !important;
+                  text-align: left !important;
+                  padding: 1rem !important;
+                  border: 1px solid #60a5fa !important;
+                  text-transform: uppercase !important;
+                  letter-spacing: 0.05em !important;
+                  font-size: 0.85rem !important;
                 }
-                .strategy-matrix table td {
-                  padding: 1rem;
-                  border: 1px solid #e5e7eb;
-                  vertical-align: top;
-                  line-height: 1.5;
+                .matrix-table td {
+                  padding: 1rem !important;
+                  border: 1px solid #e5e7eb !important;
+                  vertical-align: top !important;
+                  line-height: 1.5 !important;
                 }
-                .strategy-matrix table tr:nth-child(even) {
-                  background-color: #f9fafb;
+                .matrix-table tr:nth-child(even) {
+                  background-color: #f9fafb !important;
                 }
-                .strategy-matrix table tr:hover {
-                  background-color: #f3f4f6;
+                .matrix-table tr:hover {
+                  background-color: #f3f4f6 !important;
                 }
-                .strategy-matrix table tr:first-child td {
-                  border-top: 2px solid #3b82f6;
+                .matrix-table tr:first-child td {
+                  border-top: 2px solid #3b82f6 !important;
                 }
-                .strategy-matrix table tr td:first-child {
-                  font-weight: 600;
-                  color: #4b5563;
-                  border-right: 2px solid #3b82f6;
-                  background-color: #eff6ff;
+                .audience-column, .matrix-table td:first-child {
+                  font-weight: 600 !important;
+                  color: #4b5563 !important;
+                  border-right: 2px solid #3b82f6 !important;
+                  background-color: #eff6ff !important;
                 }
                 .strategy-matrix h1 {
                   font-size: 1.8rem;
                   font-weight: 700;
                   margin: 1.5rem 0;
-                  color: #1f2937;
+                  color: #3b82f6;
                   text-align: center;
                   border-bottom: 2px solid #3b82f6;
                   padding-bottom: 0.5rem;
@@ -321,6 +350,7 @@ export default function StrategyPage() {
                 }
               `}</style>
               <div 
+                ref={matrixRef}
                 className="prose max-w-none"
                 dangerouslySetInnerHTML={{ __html: parsedMatrix }} 
               />
