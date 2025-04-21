@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * API handler for saving strategies to Supabase
@@ -28,12 +29,15 @@ export default async function handler(req, res) {
     // Initialize Supabase client
     const supabase = createServerSupabaseClient();
     
+    // Generate a temp UUID for anonymous users
+    const tempUserId = user_id === 'anonymous' ? uuidv4() : user_id;
+    
     // Insert the strategy into Supabase
     const { data, error } = await supabase
       .from('strategies')
       .insert([{ 
         name,
-        user_id: user_id || 'anonymous', // Fallback until auth is implemented
+        user_id: tempUserId, // Use tempUserId which is a UUID
         business_type,
         objectives,
         audience,

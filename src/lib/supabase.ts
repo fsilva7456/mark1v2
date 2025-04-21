@@ -27,7 +27,7 @@ export const createServerSupabaseClient = () => {
 export interface Strategy {
   id: string;
   name: string;
-  user_id: string;
+  user_id: string; // UUID stored as string
   business_type: string;
   objectives: string;
   audience: string;

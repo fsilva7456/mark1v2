@@ -4,7 +4,7 @@
 
 export interface SaveStrategyParams {
   name: string;
-  user_id: string;
+  user_id: string; // Will be converted to UUID on the server if 'anonymous'
   business_type: string;
   objectives: string;
   audience: string;
