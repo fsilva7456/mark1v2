@@ -6,6 +6,7 @@ import { marked } from 'marked';
 import { buildContentOutlinePrompt } from './utils/contentOutlinePromptBuilder';
 import { generateContentPlan, saveContentPlan } from './utils/contentLlmClient';
 import { FullStrategyDetails } from './utils/types';
+import './styles/contentPlan.css';
 
 /**
  * Content Management page component
@@ -85,6 +86,12 @@ export default function ContentManagementPage() {
   // Parse content plan to HTML when it changes
   useEffect(() => {
     if (contentPlan) {
+      // Configure marked options for better formatting
+      marked.setOptions({
+        gfm: true,
+        breaks: true,
+      });
+      
       setParsedContentPlan(marked.parse(contentPlan) as string);
     } else {
       setParsedContentPlan(null);
@@ -285,7 +292,7 @@ export default function ContentManagementPage() {
               )}
               
               <div 
-                className="p-4 bg-gray-50 rounded-md prose max-w-none" 
+                className="content-plan-display p-6 bg-white border border-gray-200 rounded-lg shadow-sm prose max-w-none"
                 dangerouslySetInnerHTML={{ __html: parsedContentPlan }}
               />
             </div>
