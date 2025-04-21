@@ -12,8 +12,22 @@ export interface SaveStrategyParams {
   matrix_content: string;
 }
 
+// Define a specific type for saved strategy data
+export interface SavedStrategyData {
+  id: string;
+  name: string;
+  user_id: string;
+  business_type: string;
+  objectives: string;
+  audience: string;
+  differentiation: string;
+  matrix_content: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SaveStrategyResponse {
-  data?: any;
+  data?: SavedStrategyData;
   status: 'success' | 'error';
   message?: string;
   error?: string;

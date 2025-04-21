@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { marked } from 'marked';
 import { buildStrategyPrompt } from './utils/StrategyPromptBuilder';
 import { generateStrategy } from './utils/strategyLlmClient';
-import { saveStrategy, SaveStrategyResponse } from './utils/strategyService';
+import { saveStrategy } from './utils/strategyService';
 
 /**
  * Strategy page with a form to collect business strategy information
