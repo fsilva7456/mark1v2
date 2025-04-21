@@ -18,9 +18,13 @@ export interface FullStrategyDetails {
 export interface ContentPlanData {
   id: string;
   strategy_id: string;
+  user_id?: string;
+  title?: string;
   special_considerations: string;
   content_plan_text: string;
+  status?: string;
   created_at: string;
+  updated_at: string;
 }
 
 export interface SaveContentPlanResponse {

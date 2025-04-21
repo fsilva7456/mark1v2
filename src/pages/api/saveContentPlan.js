@@ -10,7 +10,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { strategy_id, special_considerations, content_plan_text } = req.body;
+    const { 
+      strategy_id, 
+      special_considerations, 
+      content_plan_text,
+      title,
+      user_id
+    } = req.body;
     
     // Validate required fields
     if (!strategy_id || !content_plan_text) {
@@ -30,13 +36,34 @@ export default async function handler(req, res) {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // If no user_id was provided, try to get the strategy's user_id
+    let finalUserId = user_id;
+    if (!finalUserId) {
+      try {
+        const { data: strategyData } = await supabase
+          .from('strategies')
+          .select('user_id')
+          .eq('id', strategy_id)
+          .single();
+        
+        if (strategyData) {
+          finalUserId = strategyData.user_id;
+        }
+      } catch (err) {
+        console.log('Could not fetch strategy user_id, continuing with null');
+      }
+    }
+
     // Insert the content plan into Supabase
     const { data, error } = await supabase
       .from('content_plans')
       .insert([{ 
         strategy_id,
         special_considerations,
-        content_plan_text
+        content_plan_text,
+        title: title || 'Content Plan',
+        user_id: finalUserId || null,
+        status: 'active'
       }])
       .select();
 

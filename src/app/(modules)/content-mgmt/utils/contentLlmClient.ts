@@ -58,6 +58,8 @@ export async function saveContentPlan(contentPlan: {
   strategy_id: string;
   special_considerations: string;
   content_plan_text: string;
+  title?: string;
+  user_id?: string;
 }): Promise<SaveContentPlanResponse> {
   try {
     const response = await fetch('/api/saveContentPlan', {

@@ -196,7 +196,7 @@ export default function ContentManagementPage() {
   };
 
   const handleSaveContentPlan = async () => {
-    if (!selectedStrategyId || !contentPlan) {
+    if (!selectedStrategyId || !contentPlan || !fullStrategyDetails) {
       setSavePlanMessage({
         text: 'Cannot save: missing strategy or content plan',
         type: 'error'
@@ -208,10 +208,18 @@ export default function ContentManagementPage() {
     setSavePlanMessage(null);
     
     try {
+      // Extract the title from the content plan (first h1)
+      const contentTitleMatch = contentPlan.match(/# ([^\n]+)/);
+      const contentTitle = contentTitleMatch 
+        ? contentTitleMatch[1]
+        : `Content Plan for ${fullStrategyDetails.name}`;
+      
       const result = await saveContentPlan({
         strategy_id: selectedStrategyId,
         special_considerations: specialConsiderations,
-        content_plan_text: contentPlan
+        content_plan_text: contentPlan,
+        title: contentTitle,
+        user_id: fullStrategyDetails.user_id
       });
       
       if (result.status === 'success') {
