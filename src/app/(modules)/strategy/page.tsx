@@ -9,11 +9,11 @@ import { generateStrategy } from './utils/strategyLlmClient';
  */
 export default function StrategyPage() {
   const [formData, setFormData] = useState({
-    name: '',
-    businessType: '',
-    objectives: '',
-    audience: '',
-    differentiation: ''
+    name: 'John Smith',
+    businessType: 'Digital Marketing Agency',
+    objectives: 'Increase client base by 30% in the next year, improve client retention, and expand service offerings to include social media management.',
+    audience: 'Small to medium-sized businesses in the tech and retail sectors, typically with 10-50 employees and annual revenue between $1-5 million.',
+    differentiation: 'Data-driven approach with weekly performance reports, specialized in conversion optimization, and offering a 90-day results guarantee.'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<{ text: string | null, error: string | null } | null>(null);
@@ -133,8 +133,22 @@ export default function StrategyPage() {
               required
             />
           </div>
-          
-          <div className="flex justify-center">
+
+          <div className="flex justify-between">
+            <button
+              type="button"
+              onClick={() => setFormData({
+                name: '',
+                businessType: '',
+                objectives: '',
+                audience: '',
+                differentiation: ''
+              })}
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            >
+              Clear Form
+            </button>
+            
             <button
               type="submit"
               disabled={isSubmitting}

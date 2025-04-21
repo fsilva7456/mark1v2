@@ -32,7 +32,7 @@ async function callGeminiApi(prompt) {
     throw new Error('GEMINI_API_KEY is not defined in environment variables');
   }
   
-  const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent';
+  const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent';
   
   const response = await fetch(`${apiUrl}?key=${apiKey}`, {
     method: 'POST',
@@ -53,7 +53,7 @@ async function callGeminiApi(prompt) {
         temperature: 0.7,
         topP: 0.9,
         topK: 40,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 1024,
       },
       safetySettings: [
         {
