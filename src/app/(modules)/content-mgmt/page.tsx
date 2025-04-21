@@ -6,6 +6,7 @@ import { marked } from 'marked';
 import { buildContentOutlinePrompt } from './utils/contentOutlinePromptBuilder';
 import { generateContentPlan, saveContentPlan } from './utils/contentLlmClient';
 import { FullStrategyDetails } from './utils/types';
+import SocialMediaGenerator from './components/SocialMediaGenerator';
 import './styles/contentPlan.css';
 
 /**
@@ -27,6 +28,7 @@ export default function ContentManagementPage() {
   const [contentPlanError, setContentPlanError] = useState<string | null>(null);
   const [savePlanMessage, setSavePlanMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [fullStrategyDetails, setFullStrategyDetails] = useState<FullStrategyDetails | null>(null);
+  const [savedContentPlanId, setSavedContentPlanId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadStrategies() {
@@ -227,6 +229,11 @@ export default function ContentManagementPage() {
           text: 'Content plan saved successfully!',
           type: 'success'
         });
+        
+        // Safe check if data exists before accessing its properties
+        if (result.data) {
+          setSavedContentPlanId(result.data.id);
+        }
       } else {
         throw new Error(result.error || 'Failed to save content plan');
       }
@@ -358,7 +365,15 @@ export default function ContentManagementPage() {
       )}
       
       {selectedStrategy && (
-        <div className="bg-white shadow rounded-lg p-6">
+        <SocialMediaGenerator 
+          strategyId={selectedStrategyId}
+          contentPlanId={savedContentPlanId}
+          isVisible={!!savedContentPlanId && savePlanMessage?.type === 'success'}
+        />
+      )}
+      
+      {selectedStrategy && (
+        <div className="bg-white shadow rounded-lg p-6 mt-6">
           <h2 className="text-xl font-semibold mb-4">Content Management Tools</h2>
           <p className="text-gray-600">
             Select a tool below to start managing content for this strategy.
