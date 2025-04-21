@@ -93,7 +93,7 @@ export default function ContentManagementPage() {
       });
       
       // Parse the markdown to HTML
-      let html = marked.parse(contentPlan) as string;
+      const html = marked.parse(contentPlan) as string;
       
       // Find all week sections and wrap them in div containers
       // This uses regex to identify week sections and restructure the HTML
