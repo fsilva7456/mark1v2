@@ -5,13 +5,12 @@ import { SocialMediaPost } from '../utils/types';
 interface SocialMediaGeneratorProps {
   strategyId: string;
   contentPlanId: string | null;
-  isVisible: boolean;
 }
 
 /**
  * Component for generating and managing social media posts
  */
-export default function SocialMediaGenerator({ strategyId, contentPlanId, isVisible }: SocialMediaGeneratorProps) {
+export default function SocialMediaGenerator({ strategyId, contentPlanId }: SocialMediaGeneratorProps) {
   const [postType, setPostType] = useState<string>('Twitter');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);

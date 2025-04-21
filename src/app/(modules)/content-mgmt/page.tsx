@@ -373,7 +373,6 @@ export default function ContentManagementPage() {
         <SocialMediaGenerator 
           strategyId={selectedStrategyId}
           contentPlanId={savedContentPlanId}
-          isVisible={true}
         />
       )}
       
