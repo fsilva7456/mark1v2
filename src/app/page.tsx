@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 
 /**
- * Home page that redirects to the todos module
+ * Home page that redirects to the main dashboard
  */
 export default function Home() {
-  redirect('/todos');
+  redirect('/main_dashboard');
 }

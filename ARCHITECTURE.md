@@ -10,19 +10,18 @@ Mark1 is a modular application built with Next.js, featuring a clear separation 
 src/
 ├── app/                     # App Router (UI components)
 │   ├── (modules)/           # Route group for feature modules
-│   │   ├── todos/           # Todo module
+│   │   ├── main_dashboard/  # Main dashboard module
 │   │   ├── content-mgmt/    # Content management module
 │   │   ├── strategy/        # Strategy module
 │   │   └── layout.tsx       # Shared layout for all modules
 │   ├── layout.tsx           # Root layout
-│   └── page.tsx             # Root page (redirects to /todos)
+│   └── page.tsx             # Root page (redirects to /main_dashboard)
 ├── components/
 │   └── shared/              # Shared components used across modules
 ├── lib/                     # Shared utilities and services
 │   └── supabase.ts          # Supabase client utilities
 └── pages/                   # Pages Router (API only)
     └── api/                 # API routes
-        └── todos/           # Todo API endpoints
 ```
 
 ## Module Structure
