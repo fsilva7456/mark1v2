@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { marked } from 'marked';
 import { buildStrategyPrompt } from './utils/StrategyPromptBuilder';
 import { generateStrategy } from './utils/strategyLlmClient';
 
@@ -17,6 +18,17 @@ export default function StrategyPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<{ text: string | null, error: string | null } | null>(null);
+  const [parsedHtml, setParsedHtml] = useState<string | null>(null);
+
+  // Parse the markdown response to HTML when result changes
+  useEffect(() => {
+    if (result?.text) {
+      const html = marked.parse(result.text);
+      setParsedHtml(html as string);
+    } else {
+      setParsedHtml(null);
+    }
+  }, [result]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -30,6 +42,7 @@ export default function StrategyPage() {
     e.preventDefault();
     setIsSubmitting(true);
     setResult(null);
+    setParsedHtml(null);
     
     try {
       // Build the LLM prompt using the utility
@@ -163,15 +176,59 @@ export default function StrategyPage() {
       {/* Result display section */}
       {result && (
         <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-4">Your Strategic Plan</h2>
+          <h2 className="text-2xl font-bold mb-4">Your Audience Targeting Matrix</h2>
           
           {result.error ? (
             <div className="p-4 bg-red-100 text-red-700 rounded-md">
               {result.error}
             </div>
-          ) : result.text ? (
-            <div className="prose max-w-none whitespace-pre-wrap">
-              {result.text}
+          ) : parsedHtml ? (
+            <div className="strategy-matrix">
+              <style jsx>{`
+                .strategy-matrix table {
+                  width: 100%;
+                  border-collapse: collapse;
+                  margin: 1rem 0;
+                  font-size: 0.9rem;
+                }
+                .strategy-matrix table th {
+                  background-color: #f3f4f6;
+                  color: #111827;
+                  font-weight: 600;
+                  text-align: left;
+                  padding: 0.75rem 1rem;
+                  border: 1px solid #e5e7eb;
+                }
+                .strategy-matrix table td {
+                  padding: 0.75rem 1rem;
+                  border: 1px solid #e5e7eb;
+                  vertical-align: top;
+                }
+                .strategy-matrix table tr:nth-child(even) {
+                  background-color: #f9fafb;
+                }
+                .strategy-matrix h1 {
+                  font-size: 1.5rem;
+                  font-weight: 700;
+                  margin: 1rem 0;
+                  color: #1f2937;
+                }
+                .strategy-matrix p {
+                  margin: 0.5rem 0;
+                  line-height: 1.5;
+                }
+                .strategy-matrix ul, .strategy-matrix ol {
+                  margin: 0.5rem 0;
+                  padding-left: 1.5rem;
+                }
+                .strategy-matrix ul li, .strategy-matrix ol li {
+                  margin: 0.25rem 0;
+                }
+              `}</style>
+              <div 
+                className="prose max-w-none"
+                dangerouslySetInnerHTML={{ __html: parsedHtml }} 
+              />
             </div>
           ) : (
             <div className="p-4 bg-gray-100 text-gray-500 rounded-md">
