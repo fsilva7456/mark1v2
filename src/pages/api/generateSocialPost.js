@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
- * API route to generate social media posts using LLM
+ * API route to generate social media posts using Gemini API
  */
 export default async function handler(req, res) {
   // Only allow POST requests
@@ -85,6 +86,9 @@ export default async function handler(req, res) {
       // Non-critical error, we can continue without previous posts
     }
 
+    // Generate a unique ID for this request
+    const requestId = uuidv4();
+
     // Prepare the prompt for the LLM
     const prompt = buildSocialMediaPostPrompt({
       strategy: strategyData,
@@ -93,37 +97,11 @@ export default async function handler(req, res) {
       previousPosts: previousPosts || []
     });
 
-    // Call the OpenAI API for completion
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a professional social media content creator that specializes in creating engaging and strategic social media posts.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 500
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      throw new Error(`OpenAI API error: ${errorData}`);
-    }
-
-    const result = await response.json();
-    const generatedPost = result.choices[0].message.content.trim();
+    // Call the Gemini API
+    const geminiResponse = await callGeminiApi(prompt);
+    
+    // Process the response
+    const generatedPost = processGeminiResponse(geminiResponse);
 
     return res.status(200).json({
       status: 'success',
@@ -136,6 +114,84 @@ export default async function handler(req, res) {
       error: error.message || 'An unexpected error occurred'
     });
   }
+}
+
+/**
+ * Make a request to the Gemini API
+ * @param {string} prompt - The prompt to send to Gemini
+ * @returns {Promise<Object>} - The response from Gemini
+ */
+async function callGeminiApi(prompt) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not defined in environment variables');
+  }
+  
+  const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent';
+  
+  const response = await fetch(`${apiUrl}?key=${apiKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        topP: 0.9,
+        topK: 40,
+        maxOutputTokens: 1024,
+      },
+      safetySettings: [
+        {
+          category: "HARM_CATEGORY_HARASSMENT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_HATE_SPEECH",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        }
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+  }
+
+  return await response.json();
+}
+
+/**
+ * Process the Gemini API response to extract relevant text
+ * @param {Object} response - The raw response from Gemini API
+ * @returns {string} - The extracted text
+ */
+function processGeminiResponse(response) {
+  // Extract the text from Gemini's response
+  if (response?.candidates?.[0]?.content?.parts?.[0]?.text) {
+    return response.candidates[0].content.parts[0].text;
+  }
+  
+  throw new Error('Unexpected response format from Gemini API');
 }
 
 /**
