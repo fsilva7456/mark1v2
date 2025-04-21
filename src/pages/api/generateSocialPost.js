@@ -13,10 +13,17 @@ export default async function handler(req, res) {
     const { strategy_id, content_plan_id, post_type } = req.body;
     
     // Validate required fields
-    if (!strategy_id || !content_plan_id || !post_type) {
+    if (!strategy_id) {
       return res.status(400).json({ 
         status: 'error', 
-        error: 'Strategy ID, content plan ID, and post type are required' 
+        error: 'Strategy ID is required' 
+      });
+    }
+
+    if (!post_type) {
+      return res.status(400).json({ 
+        status: 'error', 
+        error: 'Post type is required' 
       });
     }
 
@@ -45,19 +52,24 @@ export default async function handler(req, res) {
       });
     }
 
-    // Fetch the content plan
-    const { data: contentPlanData, error: contentPlanError } = await supabase
-      .from('content_plans')
-      .select('*')
-      .eq('id', content_plan_id)
-      .single();
+    // Fetch the content plan if a content_plan_id was provided
+    let contentPlanData = null;
+    if (content_plan_id) {
+      const { data, error: contentPlanError } = await supabase
+        .from('content_plans')
+        .select('*')
+        .eq('id', content_plan_id)
+        .single();
 
-    if (contentPlanError) {
-      console.error('Error fetching content plan:', contentPlanError);
-      return res.status(500).json({ 
-        status: 'error',
-        error: contentPlanError.message || 'Failed to fetch content plan'
-      });
+      if (contentPlanError) {
+        console.error('Error fetching content plan:', contentPlanError);
+        return res.status(500).json({ 
+          status: 'error',
+          error: contentPlanError.message || 'Failed to fetch content plan'
+        });
+      }
+      
+      contentPlanData = data;
     }
 
     // Fetch previous posts for this strategy to avoid repetition
@@ -133,6 +145,10 @@ function buildSocialMediaPostPrompt({ strategy, contentPlan, postType, previousP
   const previousPostsText = previousPosts.length > 0 
     ? `Previous posts:\n${previousPosts.map(post => `- ${post.post_text} (${post.post_type})`).join('\n')}`
     : 'No previous posts.';
+  
+  const contentPlanText = contentPlan 
+    ? `CONTENT PLAN:\n${contentPlan.content_plan_text}`
+    : 'CONTENT PLAN:\nNo content plan provided. Generate based on business strategy only.';
 
   return `
 Create a compelling social media post for ${postType} that aligns with this business strategy and content plan:
@@ -143,8 +159,7 @@ BUSINESS STRATEGY:
 - Business Objectives: ${strategy.objectives}
 - Unique Differentiation: ${strategy.differentiation}
 
-CONTENT PLAN:
-${contentPlan.content_plan_text}
+${contentPlanText}
 
 PREVIOUS POSTS (DO NOT REPEAT THESE):
 ${previousPostsText}

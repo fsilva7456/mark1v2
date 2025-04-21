@@ -269,8 +269,8 @@ export default function ContentManagementPage() {
   };
 
   const handleGeneratePost = async () => {
-    if (!selectedStrategyId || !savedContentPlanId) {
-      setPostError('Strategy and content plan are required to generate a post');
+    if (!selectedStrategyId) {
+      setPostError('Strategy is required to generate a post');
       return;
     }
 
@@ -280,11 +280,18 @@ export default function ContentManagementPage() {
     setPostMessage(null);
 
     try {
-      const result = await generateSocialPost({
+      // Build request data, making content_plan_id optional
+      const requestData = {
         strategy_id: selectedStrategyId,
-        content_plan_id: savedContentPlanId,
         post_type: postType
-      });
+      };
+      
+      // Add content plan ID if it exists
+      if (savedContentPlanId) {
+        Object.assign(requestData, { content_plan_id: savedContentPlanId });
+      }
+      
+      const result = await generateSocialPost(requestData);
 
       if (result.error) {
         setPostError(result.error);
@@ -302,9 +309,9 @@ export default function ContentManagementPage() {
   };
 
   const handleSavePost = async () => {
-    if (!selectedStrategyId || !savedContentPlanId || !generatedPost) {
+    if (!selectedStrategyId || !generatedPost) {
       setPostMessage({
-        text: 'Cannot save: missing strategy, content plan, or post text',
+        text: 'Cannot save: missing strategy or post text',
         type: 'error'
       });
       return;
@@ -314,13 +321,26 @@ export default function ContentManagementPage() {
     setPostMessage(null);
 
     try {
-      const result = await saveSocialPost({
+      // Build post data, making content_plan_id optional
+      const postData: {
+        strategy_id: string;
+        content_plan_id?: string;
+        post_text: string;
+        post_type: string;
+        post_status: 'draft' | 'scheduled' | 'posted';
+      } = {
         strategy_id: selectedStrategyId,
-        content_plan_id: savedContentPlanId,
         post_text: generatedPost,
         post_type: postType,
         post_status: 'draft'
-      });
+      };
+      
+      // Add content plan ID if it exists
+      if (savedContentPlanId) {
+        postData.content_plan_id = savedContentPlanId;
+      }
+      
+      const result = await saveSocialPost(postData);
 
       if (result.status === 'success') {
         setPostMessage({
@@ -347,13 +367,22 @@ export default function ContentManagementPage() {
   };
 
   const loadSavedPosts = async () => {
-    if (!selectedStrategyId || !savedContentPlanId) return;
+    if (!selectedStrategyId) return;
 
     try {
-      const result = await fetchSocialPosts({
-        strategy_id: selectedStrategyId,
-        content_plan_id: savedContentPlanId
-      });
+      const queryParams: {
+        strategy_id: string;
+        content_plan_id?: string;
+      } = {
+        strategy_id: selectedStrategyId
+      };
+      
+      // Only filter by content plan if one is selected
+      if (savedContentPlanId) {
+        queryParams.content_plan_id = savedContentPlanId;
+      }
+      
+      const result = await fetchSocialPosts(queryParams);
 
       if (result.status === 'success' && result.data) {
         setSavedPosts(result.data);
@@ -490,11 +519,16 @@ export default function ContentManagementPage() {
       )}
       
       {/* Social Media Post Generator - integrated directly */}
-      {selectedStrategy && savedContentPlanId && (
+      {selectedStrategy && (
         <div className="mt-6 bg-white shadow rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-4">Social Media Post Generator</h2>
           <p className="text-gray-600 mb-4">
-            Generate social media posts based on your strategy and content plan.
+            Generate social media posts based on your strategy{savedContentPlanId ? ' and content plan' : ''}.
+            {!savedContentPlanId && (
+              <span className="block mt-2 text-amber-600">
+                Note: For best results, create and save a content plan first.
+              </span>
+            )}
           </p>
 
           <div className="mb-4">

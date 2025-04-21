@@ -8,7 +8,7 @@ import { SocialMediaPostResponse, SocialMediaPostsResponse } from './types';
  */
 export async function generateSocialPost(params: {
   strategy_id: string;
-  content_plan_id: string;
+  content_plan_id?: string;
   post_type: string;
 }): Promise<{text: string | null, error: string | null}> {
   try {
@@ -52,7 +52,7 @@ export async function generateSocialPost(params: {
  */
 export async function saveSocialPost(postData: {
   strategy_id: string;
-  content_plan_id: string;
+  content_plan_id?: string;
   post_text: string;
   post_type: string;
   post_status?: 'draft' | 'scheduled' | 'posted';

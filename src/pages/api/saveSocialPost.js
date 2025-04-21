@@ -20,10 +20,10 @@ export default async function handler(req, res) {
     } = req.body;
     
     // Validate required fields
-    if (!strategy_id || !content_plan_id || !post_text || !post_type) {
+    if (!strategy_id || !post_text || !post_type) {
       return res.status(400).json({ 
         status: 'error', 
-        error: 'Strategy ID, content plan ID, post text, and post type are required' 
+        error: 'Strategy ID, post text, and post type are required' 
       });
     }
 
