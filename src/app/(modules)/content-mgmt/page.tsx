@@ -5,6 +5,7 @@ import { fetchStrategies, Strategy } from './utils/contentService';
 import { marked } from 'marked';
 import { buildContentOutlinePrompt } from './utils/contentOutlinePromptBuilder';
 import { generateContentPlan, saveContentPlan } from './utils/contentLlmClient';
+import { FullStrategyDetails } from './utils/types';
 
 /**
  * Content Management page component
@@ -24,7 +25,7 @@ export default function ContentManagementPage() {
   const [parsedContentPlan, setParsedContentPlan] = useState<string | null>(null);
   const [contentPlanError, setContentPlanError] = useState<string | null>(null);
   const [savePlanMessage, setSavePlanMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const [fullStrategyDetails, setFullStrategyDetails] = useState<any>(null);
+  const [fullStrategyDetails, setFullStrategyDetails] = useState<FullStrategyDetails | null>(null);
 
   useEffect(() => {
     async function loadStrategies() {

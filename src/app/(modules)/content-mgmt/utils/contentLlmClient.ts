@@ -1,6 +1,7 @@
 /**
  * Client for making LLM requests to generate content plans
  */
+import { SaveContentPlanResponse } from './types';
 
 interface ContentPlanResponse {
   text: string | null;
@@ -51,13 +52,13 @@ export async function generateContentPlan(prompt: string): Promise<ContentPlanRe
  * Saves a generated content plan to the database
  * 
  * @param {object} contentPlan - The content plan data to save
- * @returns {Promise<object>} The save result
+ * @returns {Promise<SaveContentPlanResponse>} The save result
  */
 export async function saveContentPlan(contentPlan: {
   strategy_id: string;
   special_considerations: string;
   content_plan_text: string;
-}): Promise<{ status: 'success' | 'error'; error?: string; data?: any }> {
+}): Promise<SaveContentPlanResponse> {
   try {
     const response = await fetch('/api/saveContentPlan', {
       method: 'POST',
