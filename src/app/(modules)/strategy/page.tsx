@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { buildStrategyPrompt } from './utils/StrategyPromptBuilder';
+import { generateStrategy } from './utils/strategyLlmClient';
 
 /**
  * Strategy page with a form to collect business strategy information
@@ -15,6 +16,7 @@ export default function StrategyPage() {
     differentiation: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [result, setResult] = useState<{ text: string | null, error: string | null } | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -27,24 +29,22 @@ export default function StrategyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setResult(null);
     
     try {
       // Build the LLM prompt using the utility
       const prompt = buildStrategyPrompt(formData);
       
-      // For now, we'll just log the prompt
-      console.log('Generated Prompt:', prompt);
+      // Use our client to generate the strategy
+      const response = await generateStrategy(prompt);
       
-      // Here you would typically send the prompt to an API endpoint
-      // that would forward it to an LLM service
-      
-      // Navigate to a results page or show results inline
-      // Example: router.push('/strategy/results');
-      
-      alert('Strategy information submitted successfully!');
+      setResult(response);
     } catch (error) {
       console.error('Error submitting strategy information:', error);
-      alert('Failed to submit strategy information. Please try again.');
+      setResult({
+        text: null,
+        error: 'Failed to submit strategy information. Please try again.'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -145,6 +145,27 @@ export default function StrategyPage() {
           </div>
         </form>
       </div>
+      
+      {/* Result display section */}
+      {result && (
+        <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold mb-4">Your Strategic Plan</h2>
+          
+          {result.error ? (
+            <div className="p-4 bg-red-100 text-red-700 rounded-md">
+              {result.error}
+            </div>
+          ) : result.text ? (
+            <div className="prose max-w-none whitespace-pre-wrap">
+              {result.text}
+            </div>
+          ) : (
+            <div className="p-4 bg-gray-100 text-gray-500 rounded-md">
+              No results to display
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 } 
