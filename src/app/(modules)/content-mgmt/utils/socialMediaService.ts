@@ -1,4 +1,4 @@
-import { SocialMediaPost, SocialMediaPostResponse, SocialMediaPostsResponse } from './types';
+import { SocialMediaPostResponse, SocialMediaPostsResponse } from './types';
 
 /**
  * Generate a social media post using the backend API
