@@ -2,8 +2,6 @@ import { createServerSupabaseClient } from '@/lib/supabase';
 
 /**
  * API route to save content plans to Supabase
- * This version handles the scenario where we don't have admin access
- * and need to work with existing RLS policies
  */
 export default async function handler(req, res) {
   // Only allow POST requests
@@ -49,49 +47,8 @@ export default async function handler(req, res) {
       }
     }
 
-    // For content plans without a user_id (public content), we need a special approach
-    // because RLS policies typically restrict operations to authenticated users
-    if (!finalUserId) {
-      // Option 1: Try to directly create the content plan (might fail due to RLS)
-      try {
-        const { data, error } = await supabase
-          .from('content_plans')
-          .insert([{ 
-            strategy_id,
-            special_considerations,
-            content_plan_text,
-            title: title || 'Content Plan',
-            user_id: null,
-            status: 'active'
-          }])
-          .select();
-
-        if (data) {
-          return res.status(200).json({
-            status: 'success',
-            data: data[0],
-            message: 'Content plan saved successfully'
-          });
-        }
-
-        if (error) {
-          console.log('Standard insert failed due to RLS, trying public content approach');
-          // Continue to fallback approach
-        }
-      } catch (e) {
-        console.log('Standard insert error:', e);
-        // Continue to fallback approach
-      }
-
-      // Option 2: Return specific instructions for administrator
-      return res.status(403).json({
-        status: 'error',
-        error: 'Cannot create content without authentication or proper RLS policies',
-        instructions: 'Please visit /api/setup-rls-policies to get SQL commands needed to fix this issue, or add a public content policy in Supabase'
-      });
-    }
-
-    // Standard approach for content with a valid user_id
+    // Insert the content plan as a public plan (null user_id)
+    // This relies on a specific RLS policy to allow null user_id inserts
     const { data, error } = await supabase
       .from('content_plans')
       .insert([{ 
@@ -99,7 +56,7 @@ export default async function handler(req, res) {
         special_considerations,
         content_plan_text,
         title: title || 'Content Plan',
-        user_id: finalUserId,
+        user_id: null, // Force user_id to be null to work with public content RLS policy
         status: 'active'
       }])
       .select();
@@ -109,7 +66,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ 
         status: 'error',
         error: error.message || 'Failed to save content plan to database',
-        details: 'This may be due to Row Level Security (RLS) policies in Supabase. Visit /api/setup-rls-policies for help.'
+        details: 'Make sure to add a policy allowing null user_id inserts: CREATE POLICY "Allow creation of public content plans" ON content_plans FOR INSERT WITH CHECK (user_id IS NULL);'
       });
     }
 
