@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { marked } from 'marked';
 import { buildStrategyPrompt } from './utils/StrategyPromptBuilder';
 import { generateStrategy } from './utils/strategyLlmClient';
+import { saveStrategy, SaveStrategyResponse } from './utils/strategyService';
 
 /**
  * Strategy page with a form to collect business strategy information
@@ -17,10 +18,13 @@ export default function StrategyPage() {
     differentiation: 'Specialized in nutrition-integrated fitness plans, certified in pre/post-natal training, offering both in-person and virtual sessions, and providing monthly fitness assessments to track progress.'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [result, setResult] = useState<{ text: string | null, error: string | null } | null>(null);
   const [parsedMatrix, setParsedMatrix] = useState<string | null>(null);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [isExplanationOpen, setIsExplanationOpen] = useState(false);
+  const [strategyName, setStrategyName] = useState('');
+  const [saveMessage, setSaveMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const matrixRef = useRef<HTMLDivElement>(null);
 
   // Apply styling to the matrix table after render
@@ -49,6 +53,13 @@ export default function StrategyPage() {
       }
     }
   }, [parsedMatrix]);
+
+  // Set default strategy name when generating a strategy
+  useEffect(() => {
+    if (result?.text && !strategyName) {
+      setStrategyName(`${formData.name}'s ${formData.businessType} Strategy`);
+    }
+  }, [result, formData, strategyName]);
 
   // Parse the markdown response to HTML when result changes
   useEffect(() => {
@@ -101,6 +112,7 @@ export default function StrategyPage() {
     setResult(null);
     setParsedMatrix(null);
     setExplanation(null);
+    setSaveMessage(null);
     
     try {
       // Build the LLM prompt using the utility
@@ -118,6 +130,52 @@ export default function StrategyPage() {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveStrategy = async () => {
+    if (!parsedMatrix || !strategyName.trim()) {
+      setSaveMessage({
+        text: 'Please provide a name for your strategy.',
+        type: 'error'
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveMessage(null);
+
+    try {
+      // Combine matrix and explanation for saving
+      const fullContent = matrixRef.current?.outerHTML || '';
+      
+      // Save the strategy to Supabase
+      const result = await saveStrategy({
+        name: strategyName,
+        user_id: 'anonymous', // Will be replaced with real user ID when auth is implemented
+        business_type: formData.businessType,
+        objectives: formData.objectives,
+        audience: formData.audience,
+        differentiation: formData.differentiation,
+        matrix_content: fullContent
+      });
+
+      if (result.status === 'success') {
+        setSaveMessage({
+          text: 'Strategy saved successfully!',
+          type: 'success'
+        });
+      } else {
+        throw new Error(result.error || 'Failed to save strategy');
+      }
+    } catch (error) {
+      console.error('Error saving strategy:', error);
+      setSaveMessage({
+        text: error instanceof Error ? error.message : 'Failed to save strategy',
+        type: 'error'
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -384,6 +442,41 @@ export default function StrategyPage() {
                   </div>
                 </div>
               )}
+
+              {/* Save strategy section */}
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h3 className="text-xl font-semibold mb-4">Save This Strategy</h3>
+                <div className="flex items-end gap-4">
+                  <div className="flex-grow">
+                    <label htmlFor="strategyName" className="block text-sm font-medium text-gray-700 mb-1">
+                      Strategy Name
+                    </label>
+                    <input
+                      type="text"
+                      id="strategyName"
+                      value={strategyName}
+                      onChange={(e) => setStrategyName(e.target.value)}
+                      className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter a name for this strategy"
+                      required
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSaveStrategy}
+                    disabled={isSaving || !strategyName.trim()}
+                    className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:bg-green-300"
+                  >
+                    {isSaving ? 'Saving...' : 'Save Strategy'}
+                  </button>
+                </div>
+
+                {saveMessage && (
+                  <div className={`mt-4 p-3 rounded-md ${saveMessage.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {saveMessage.text}
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="p-4 bg-gray-100 text-gray-500 rounded-md">

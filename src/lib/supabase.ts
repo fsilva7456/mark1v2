@@ -1,28 +1,38 @@
 import { createClient } from '@supabase/supabase-js';
 
-let supabase: ReturnType<typeof createClient> | null = null;
+// Ensure environment variables are properly loaded
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  throw new Error('Missing Supabase environment variables');
+}
 
-// This approach ensures the client is only created in browser environment
-// or when environment variables are available
-export const getSupabase = () => {
-  if (supabase) return supabase;
-  
+// Supabase client for browser-side usage
+export const supabaseClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
+// Create a Supabase server client (for API routes)
+export const createServerSupabaseClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase URL or anonymous key not provided. Supabase client will not work properly.');
-    
-    // During static build, return a mock client
-    if (typeof window === 'undefined') {
-      return null;
-    }
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables');
   }
-  
-  // Only create the client if we have the credentials
-  if (supabaseUrl && supabaseAnonKey) {
-    supabase = createClient(supabaseUrl, supabaseAnonKey);
-  }
-  
-  return supabase;
-}; 
+
+  return createClient(supabaseUrl, supabaseKey);
+};
+
+// Types for strategies
+export interface Strategy {
+  id: string;
+  name: string;
+  user_id: string;
+  business_type: string;
+  objectives: string;
+  audience: string;
+  differentiation: string;
+  matrix_content: string;
+  created_at: string;
+  updated_at: string;
+} 
