@@ -1,14 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { buildStrategyPrompt } from './utils/StrategyPromptBuilder';
 
 /**
  * Strategy page with a form to collect business strategy information
  */
 export default function StrategyPage() {
-  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     businessType: '',
@@ -41,7 +39,7 @@ export default function StrategyPage() {
       // that would forward it to an LLM service
       
       // Navigate to a results page or show results inline
-      // router.push('/strategy/results');
+      // Example: router.push('/strategy/results');
       
       alert('Strategy information submitted successfully!');
     } catch (error) {
