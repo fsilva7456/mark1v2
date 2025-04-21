@@ -86,13 +86,62 @@ export default function ContentManagementPage() {
   // Parse content plan to HTML when it changes
   useEffect(() => {
     if (contentPlan) {
-      // Configure marked options for better formatting
+      // Configure marked options
       marked.setOptions({
         gfm: true,
         breaks: true,
       });
       
-      setParsedContentPlan(marked.parse(contentPlan) as string);
+      // Parse the markdown to HTML
+      let html = marked.parse(contentPlan) as string;
+      
+      // Find all week sections and wrap them in div containers
+      // This uses regex to identify week sections and restructure the HTML
+      const weekTitles = ['Week 1', 'Week 2', 'Week 3'];
+      
+      // First, find the title and overall theme
+      const titleMatch = html.match(/<h1[^>]*>(.*?)<\/h1>/);
+      const themeMatch = html.match(/<h2[^>]*>(.*?)<\/h2>/);
+      
+      let restructuredHtml = '';
+      
+      // Add the title and theme
+      if (titleMatch) {
+        restructuredHtml += titleMatch[0];
+      }
+      
+      if (themeMatch) {
+        restructuredHtml += themeMatch[0];
+      }
+      
+      // Create container for weeks
+      restructuredHtml += '<div class="weeks-container">';
+      
+      // For each week, extract the content and wrap it
+      weekTitles.forEach(weekTitle => {
+        const weekRegex = new RegExp(`<h3[^>]*>${weekTitle}.*?<\/h3>(.*?)(?=<h3|$)`, 's');
+        const weekMatch = html.match(weekRegex);
+        
+        if (weekMatch) {
+          // Extract the content after the h3 (which should be the list)
+          const weekContent = weekMatch[1].trim();
+          
+          // Create a card for this week
+          restructuredHtml += `
+            <div class="week-card">
+              <h3>${weekTitle}</h3>
+              <div class="week-content">
+                ${weekContent}
+              </div>
+            </div>
+          `;
+        }
+      });
+      
+      // Close the weeks container
+      restructuredHtml += '</div>';
+      
+      setParsedContentPlan(restructuredHtml);
     } else {
       setParsedContentPlan(null);
     }
