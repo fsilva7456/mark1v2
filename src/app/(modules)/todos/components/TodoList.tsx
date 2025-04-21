@@ -17,6 +17,10 @@ const SAMPLE_TODOS: Todo[] = [
   { id: '3', task: 'Deploy to Vercel', is_complete: false, created_at: new Date().toISOString() }
 ];
 
+/**
+ * TodoList component for displaying and managing todos
+ * This is a module-specific implementation that connects directly to Supabase
+ */
 export default function TodoList() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTask, setNewTask] = useState('');
