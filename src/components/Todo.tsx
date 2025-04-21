@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 type Todo = {
   id: string;
@@ -10,10 +10,18 @@ type Todo = {
   created_at: string;
 };
 
+// Sample todos for when Supabase is not connected
+const SAMPLE_TODOS: Todo[] = [
+  { id: '1', task: 'Setup Next.js project', is_complete: true, created_at: new Date().toISOString() },
+  { id: '2', task: 'Connect to Supabase', is_complete: false, created_at: new Date().toISOString() },
+  { id: '3', task: 'Deploy to Vercel', is_complete: false, created_at: new Date().toISOString() }
+];
+
 export default function TodoList() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTask, setNewTask] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
 
   useEffect(() => {
     fetchTodos();
@@ -23,6 +31,17 @@ export default function TodoList() {
     try {
       setLoading(true);
       
+      const supabase = getSupabase();
+      
+      if (!supabase) {
+        console.log('No Supabase client available, using sample data');
+        setTodos(SAMPLE_TODOS);
+        setIsSupabaseConnected(false);
+        return;
+      }
+      
+      setIsSupabaseConnected(true);
+      
       // This is where we'll fetch from Supabase when connected
       const { data, error } = await supabase
         .from('todos')
@@ -31,15 +50,15 @@ export default function TodoList() {
         
       if (error) throw error;
       
-      if (data) setTodos(data);
+      if (data) {
+        // Ensure data has the correct shape
+        setTodos(data as Todo[]);
+      }
     } catch (error) {
       console.error('Error fetching todos:', error);
       // For demo purposes, set some sample data
-      setTodos([
-        { id: '1', task: 'Setup Next.js project', is_complete: true, created_at: new Date().toISOString() },
-        { id: '2', task: 'Connect to Supabase', is_complete: false, created_at: new Date().toISOString() },
-        { id: '3', task: 'Deploy to Vercel', is_complete: false, created_at: new Date().toISOString() }
-      ]);
+      setTodos(SAMPLE_TODOS);
+      setIsSupabaseConnected(false);
     } finally {
       setLoading(false);
     }
@@ -49,6 +68,21 @@ export default function TodoList() {
     if (!newTask.trim()) return;
     
     try {
+      const supabase = getSupabase();
+      
+      if (!supabase) {
+        // Fallback to local state if Supabase is not available
+        const newTodo = {
+          id: Date.now().toString(),
+          task: newTask,
+          is_complete: false,
+          created_at: new Date().toISOString()
+        };
+        setTodos([newTodo, ...todos]);
+        setNewTask('');
+        return;
+      }
+      
       // This is where we'll insert to Supabase when connected
       const { data, error } = await supabase
         .from('todos')
@@ -58,7 +92,8 @@ export default function TodoList() {
       if (error) throw error;
       
       if (data) {
-        setTodos([...data, ...todos]);
+        // Ensure data has the correct shape
+        setTodos([...(data as Todo[]), ...todos]);
         setNewTask('');
       }
     } catch (error) {
@@ -78,6 +113,12 @@ export default function TodoList() {
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
       <h1 className="text-2xl font-bold mb-4">Todo List</h1>
+      
+      {!isSupabaseConnected && (
+        <div className="p-3 mb-4 bg-yellow-100 text-yellow-800 rounded">
+          ⚠️ Running with sample data. Supabase not connected.
+        </div>
+      )}
       
       <div className="flex mb-4">
         <input

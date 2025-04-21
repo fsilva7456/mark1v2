@@ -1,4 +1,7 @@
-import TodoList from '@/components/Todo';
+import dynamic from 'next/dynamic';
+
+// Use dynamic import with SSR disabled to avoid Supabase initialization during static build
+const TodoList = dynamic(() => import('@/components/Todo'), { ssr: false });
 
 export default function Home() {
   return (
