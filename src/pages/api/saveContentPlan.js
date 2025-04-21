@@ -49,7 +49,7 @@ export default async function handler(req, res) {
         if (strategyData) {
           finalUserId = strategyData.user_id;
         }
-      } catch (err) {
+      } catch (_err) {
         console.log('Could not fetch strategy user_id, continuing with null');
       }
     }
