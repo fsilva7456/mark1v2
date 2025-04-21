@@ -5,8 +5,8 @@ import { fetchStrategies, Strategy } from './utils/contentService';
 import { marked } from 'marked';
 import { buildContentOutlinePrompt } from './utils/contentOutlinePromptBuilder';
 import { generateContentPlan, saveContentPlan } from './utils/contentLlmClient';
-import { FullStrategyDetails } from './utils/types';
-import SocialMediaGenerator from './components/SocialMediaGenerator';
+import { FullStrategyDetails, SocialMediaPost } from './utils/types';
+import { generateSocialPost, saveSocialPost, fetchSocialPosts } from './utils/socialMediaService';
 import './styles/contentPlan.css';
 
 /**
@@ -29,6 +29,16 @@ export default function ContentManagementPage() {
   const [savePlanMessage, setSavePlanMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [fullStrategyDetails, setFullStrategyDetails] = useState<FullStrategyDetails | null>(null);
   const [savedContentPlanId, setSavedContentPlanId] = useState<string | null>(null);
+  
+  // Social media post state
+  const [postType, setPostType] = useState<string>('Twitter');
+  const [isGeneratingPost, setIsGeneratingPost] = useState<boolean>(false);
+  const [isSavingPost, setIsSavingPost] = useState<boolean>(false);
+  const [generatedPost, setGeneratedPost] = useState<string | null>(null);
+  const [postError, setPostError] = useState<string | null>(null);
+  const [savedPosts, setSavedPosts] = useState<SocialMediaPost[]>([]);
+  const [postMessage, setPostMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [showSavedPosts, setShowSavedPosts] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadStrategies() {
@@ -253,6 +263,117 @@ export default function ContentManagementPage() {
     (strategy) => strategy.id === selectedStrategyId
   );
 
+  // Social media post handlers
+  const handlePostTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPostType(e.target.value);
+  };
+
+  const handleGeneratePost = async () => {
+    if (!selectedStrategyId || !savedContentPlanId) {
+      setPostError('Strategy and content plan are required to generate a post');
+      return;
+    }
+
+    setIsGeneratingPost(true);
+    setPostError(null);
+    setGeneratedPost(null);
+    setPostMessage(null);
+
+    try {
+      const result = await generateSocialPost({
+        strategy_id: selectedStrategyId,
+        content_plan_id: savedContentPlanId,
+        post_type: postType
+      });
+
+      if (result.error) {
+        setPostError(result.error);
+      } else if (result.text) {
+        setGeneratedPost(result.text);
+      } else {
+        setPostError('Failed to generate post - received empty response');
+      }
+    } catch (err) {
+      console.error('Error generating social media post:', err);
+      setPostError('An unexpected error occurred while generating the post');
+    } finally {
+      setIsGeneratingPost(false);
+    }
+  };
+
+  const handleSavePost = async () => {
+    if (!selectedStrategyId || !savedContentPlanId || !generatedPost) {
+      setPostMessage({
+        text: 'Cannot save: missing strategy, content plan, or post text',
+        type: 'error'
+      });
+      return;
+    }
+
+    setIsSavingPost(true);
+    setPostMessage(null);
+
+    try {
+      const result = await saveSocialPost({
+        strategy_id: selectedStrategyId,
+        content_plan_id: savedContentPlanId,
+        post_text: generatedPost,
+        post_type: postType,
+        post_status: 'draft'
+      });
+
+      if (result.status === 'success') {
+        setPostMessage({
+          text: 'Social media post saved successfully!',
+          type: 'success'
+        });
+        setGeneratedPost(null);
+        // Refresh the list of saved posts if it's visible
+        if (showSavedPosts) {
+          loadSavedPosts();
+        }
+      } else {
+        throw new Error(result.error || 'Failed to save social media post');
+      }
+    } catch (err) {
+      console.error('Error saving social media post:', err);
+      setPostMessage({
+        text: err instanceof Error ? err.message : 'Failed to save social media post',
+        type: 'error'
+      });
+    } finally {
+      setIsSavingPost(false);
+    }
+  };
+
+  const loadSavedPosts = async () => {
+    if (!selectedStrategyId || !savedContentPlanId) return;
+
+    try {
+      const result = await fetchSocialPosts({
+        strategy_id: selectedStrategyId,
+        content_plan_id: savedContentPlanId
+      });
+
+      if (result.status === 'success' && result.data) {
+        setSavedPosts(result.data);
+      } else {
+        console.error('Failed to load saved posts:', result.error);
+      }
+    } catch (err) {
+      console.error('Error fetching saved posts:', err);
+    }
+  };
+
+  const toggleSavedPosts = async () => {
+    const newState = !showSavedPosts;
+    setShowSavedPosts(newState);
+    
+    if (newState) {
+      await loadSavedPosts();
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Content Management</h1>
@@ -368,14 +489,112 @@ export default function ContentManagementPage() {
         </div>
       )}
       
-      {/* Social Media Generator Section */}
+      {/* Social Media Post Generator - integrated directly */}
       {selectedStrategy && savedContentPlanId && (
-        <SocialMediaGenerator 
-          strategyId={selectedStrategyId}
-          contentPlanId={savedContentPlanId}
-        />
+        <div className="mt-6 bg-white shadow rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">Social Media Post Generator</h2>
+          <p className="text-gray-600 mb-4">
+            Generate social media posts based on your strategy and content plan.
+          </p>
+
+          <div className="mb-4">
+            <label htmlFor="post-type" className="block text-sm font-medium text-gray-700 mb-1">
+              Platform
+            </label>
+            <select
+              id="post-type"
+              className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              value={postType}
+              onChange={handlePostTypeChange}
+            >
+              <option value="Twitter">Twitter/X</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Instagram">Instagram</option>
+            </select>
+          </div>
+
+          <div className="flex justify-start mb-6 space-x-4">
+            <button
+              onClick={handleGeneratePost}
+              disabled={isGeneratingPost}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {isGeneratingPost ? 'Generating...' : 'Generate Post'}
+            </button>
+            
+            <button
+              onClick={toggleSavedPosts}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              {showSavedPosts ? 'Hide Saved Posts' : 'Show Saved Posts'}
+            </button>
+          </div>
+
+          {postError && (
+            <div className="p-4 mb-4 bg-red-50 text-red-600 rounded-md">
+              {postError}
+            </div>
+          )}
+
+          {generatedPost && (
+            <div className="mt-6">
+              <div className="mb-4 flex justify-between items-center">
+                <h3 className="text-lg font-medium">Generated Post for {postType}</h3>
+                <button
+                  onClick={handleSavePost}
+                  disabled={isSavingPost}
+                  className="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                >
+                  {isSavingPost ? 'Saving...' : 'Save Post'}
+                </button>
+              </div>
+
+              {postMessage && (
+                <div className={`p-3 mb-4 rounded-md ${
+                  postMessage.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                }`}>
+                  {postMessage.text}
+                </div>
+              )}
+
+              <div className="p-4 border border-gray-300 rounded-md bg-gray-50 whitespace-pre-wrap">
+                {generatedPost}
+              </div>
+            </div>
+          )}
+
+          {showSavedPosts && savedPosts.length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-lg font-medium mb-4">Saved Posts</h3>
+              <div className="space-y-4">
+                {savedPosts.map((post) => (
+                  <div key={post.id} className="p-4 border border-gray-200 rounded-md">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-sm font-medium">{post.post_type}</span>
+                      <span className="text-xs text-gray-500">
+                        {new Date(post.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="whitespace-pre-wrap">{post.post_text}</p>
+                    <div className="mt-2 text-xs text-gray-500">
+                      Status: <span className="px-2 py-0.5 bg-gray-100 rounded">{post.post_status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {showSavedPosts && savedPosts.length === 0 && (
+            <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-md text-center text-gray-600">
+              No saved posts found for this content plan.
+            </div>
+          )}
+        </div>
       )}
       
+      {/* Content Management Tools - existing code */}
       {selectedStrategy && (
         <div className="bg-white shadow rounded-lg p-6 mt-6">
           <h2 className="text-xl font-semibold mb-4">Content Management Tools</h2>
