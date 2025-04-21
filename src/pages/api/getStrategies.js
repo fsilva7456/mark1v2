@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createServerSupabaseClient } from '@/lib/supabase';
 
 /**
  * API route to get all strategies
@@ -15,20 +15,7 @@ export default async function handler(req, res) {
 
   try {
     // Initialize Supabase client
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl || !supabaseKey) {
-      return res.status(500).json({ status: 'error', error: 'Supabase credentials are missing' });
-    }
-    
-    // Creating client with service role key which can bypass RLS
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      }
-    });
+    const supabase = createServerSupabaseClient();
 
     // Fetch all strategies
     // Optional: Add query parameters for pagination or filtering
