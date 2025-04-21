@@ -222,58 +222,83 @@ export default function StrategyPage() {
                 .strategy-matrix table {
                   width: 100%;
                   border-collapse: collapse;
-                  margin: 1rem 0;
-                  font-size: 0.9rem;
+                  margin: 1.5rem 0;
+                  font-size: 0.95rem;
+                  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                  border-radius: 0.5rem;
+                  overflow: hidden;
                 }
                 .strategy-matrix table th {
-                  background-color: #f3f4f6;
-                  color: #111827;
+                  background-color: #3b82f6;
+                  color: white;
                   font-weight: 600;
                   text-align: left;
-                  padding: 0.75rem 1rem;
-                  border: 1px solid #e5e7eb;
+                  padding: 1rem;
+                  border: 1px solid #60a5fa;
+                  text-transform: uppercase;
+                  letter-spacing: 0.05em;
+                  font-size: 0.85rem;
                 }
                 .strategy-matrix table td {
-                  padding: 0.75rem 1rem;
+                  padding: 1rem;
                   border: 1px solid #e5e7eb;
                   vertical-align: top;
+                  line-height: 1.5;
                 }
                 .strategy-matrix table tr:nth-child(even) {
                   background-color: #f9fafb;
                 }
+                .strategy-matrix table tr:hover {
+                  background-color: #f3f4f6;
+                }
+                .strategy-matrix table tr:first-child td {
+                  border-top: 2px solid #3b82f6;
+                }
+                .strategy-matrix table tr td:first-child {
+                  font-weight: 600;
+                  color: #4b5563;
+                  border-right: 2px solid #3b82f6;
+                  background-color: #eff6ff;
+                }
                 .strategy-matrix h1 {
-                  font-size: 1.5rem;
+                  font-size: 1.8rem;
                   font-weight: 700;
-                  margin: 1rem 0;
+                  margin: 1.5rem 0;
                   color: #1f2937;
+                  text-align: center;
+                  border-bottom: 2px solid #3b82f6;
+                  padding-bottom: 0.5rem;
+                  margin-bottom: 1.5rem;
                 }
                 .strategy-matrix p {
-                  margin: 0.5rem 0;
-                  line-height: 1.5;
+                  margin: 0.75rem 0;
+                  line-height: 1.6;
                 }
                 .strategy-matrix ul, .strategy-matrix ol {
-                  margin: 0.5rem 0;
+                  margin: 0.75rem 0;
                   padding-left: 1.5rem;
                 }
                 .strategy-matrix ul li, .strategy-matrix ol li {
-                  margin: 0.25rem 0;
+                  margin: 0.5rem 0;
                 }
                 .accordion-button {
                   display: flex;
                   align-items: center;
                   width: 100%;
                   padding: 0.75rem 1rem;
-                  margin-top: 1rem;
-                  background-color: #f3f4f6;
-                  border: 1px solid #e5e7eb;
+                  margin-top: 1.5rem;
+                  background-color: #3b82f6;
+                  color: white;
+                  border: none;
                   border-radius: 0.375rem;
                   font-weight: 600;
                   text-align: left;
                   transition: all 0.2s ease;
                   cursor: pointer;
+                  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
                 }
                 .accordion-button:hover {
-                  background-color: #e5e7eb;
+                  background-color: #2563eb;
                 }
                 .accordion-button svg {
                   margin-right: 0.5rem;
@@ -289,6 +314,10 @@ export default function StrategyPage() {
                 }
                 .accordion-content.open {
                   max-height: 1000px;
+                }
+                .accordion-content .prose {
+                  background-color: #f9fafb;
+                  border-radius: 0 0 0.375rem 0.375rem;
                 }
               `}</style>
               <div 
@@ -315,11 +344,11 @@ export default function StrategyPage() {
                         clipRule="evenodd" 
                       />
                     </svg>
-                    <span>View Explanation</span>
+                    <span>{isExplanationOpen ? 'Hide Explanation' : 'View Explanation'}</span>
                   </button>
                   <div className={`accordion-content ${isExplanationOpen ? 'open' : ''}`}>
                     <div 
-                      className="p-4 border border-t-0 border-gray-200 rounded-b prose max-w-none"
+                      className="p-6 border border-t-0 border-gray-200 rounded-b prose max-w-none bg-white shadow-inner"
                       dangerouslySetInnerHTML={{ __html: explanation }}
                     />
                   </div>
@@ -335,4 +364,4 @@ export default function StrategyPage() {
       )}
     </div>
   );
-} 
+}
