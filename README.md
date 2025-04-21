@@ -17,6 +17,8 @@ A simple todo application built with Next.js, TypeScript, Tailwind CSS, and Supa
 - Node.js 18.x or later
 - npm or yarn
 - Supabase account
+- GitHub account
+- Vercel account
 
 ### Setup Instructions
 
@@ -31,16 +33,13 @@ A simple todo application built with Next.js, TypeScript, Tailwind CSS, and Supa
    npm install
    ```
 
-3. Set up environment variables
-   - Copy `.env.local.example` to `.env.local`
-   - Update the Supabase URL and anon key in `.env.local`
-
-4. Run the development server
+3. Push your code to GitHub
    ```bash
-   npm run dev
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin <your-github-repo-url>
+   git push -u origin main
    ```
-
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Supabase Setup
 
@@ -50,16 +49,16 @@ A simple todo application built with Next.js, TypeScript, Tailwind CSS, and Supa
    - `task` (text, not null)
    - `is_complete` (boolean, default: false)
    - `created_at` (timestamp with time zone, default: now())
-3. Copy your Supabase URL and anon key to `.env.local`
 
 ## Deployment
 
 This project is configured for easy deployment on Vercel:
 
-1. Push your code to GitHub
-2. Import the project into Vercel
-3. Set the environment variables in the Vercel dashboard
-4. Deploy!
+1. Import the GitHub repository into Vercel
+2. Set the environment variables in the Vercel dashboard:
+   - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anonymous key
+3. Deploy!
 
 ## License
 
