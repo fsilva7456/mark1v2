@@ -11,7 +11,7 @@ import { supabaseClient } from '@/lib/supabase';
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const registered = searchParams.get('registered');
+  const registered = searchParams?.get('registered') || null;
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
