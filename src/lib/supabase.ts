@@ -12,9 +12,13 @@ export const supabaseClient = createClient(
 );
 
 // Create a Supabase server client (for API routes)
-export const createServerSupabaseClient = () => {
+export const createServerSupabaseClient = (options?: { admin?: boolean }) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  // Use service role key when admin is true to bypass RLS
+  const supabaseKey = options?.admin 
+    ? process.env.SUPABASE_SERVICE_ROLE_KEY
+    : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
   if (!supabaseUrl || !supabaseKey) {
     throw new Error('Missing Supabase environment variables');

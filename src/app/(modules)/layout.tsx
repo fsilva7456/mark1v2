@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import LogoutButton from '@/components/shared/LogoutButton';
 
 /**
  * Layout component for the modules route group
@@ -39,6 +40,9 @@ export default function ModulesLayout({
                   Strategy
                 </Link>
               </nav>
+            </div>
+            <div className="flex items-center">
+              <LogoutButton />
             </div>
           </div>
         </div>

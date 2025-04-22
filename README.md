@@ -23,7 +23,7 @@ A simple todo application built with Next.js, TypeScript, Tailwind CSS, and Supa
 ### Setup Instructions
 
 1. Clone the repository
-   ```bash
+```bash
    git clone <your-repo-url>
    cd mark1v2
    ```
