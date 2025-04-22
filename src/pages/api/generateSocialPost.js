@@ -86,9 +86,6 @@ export default async function handler(req, res) {
       // Non-critical error, we can continue without previous posts
     }
 
-    // Generate a unique ID for this request
-    const requestId = uuidv4();
-
     // Prepare the prompt for the LLM
     const prompt = buildSocialMediaPostPrompt({
       strategy: strategyData,
