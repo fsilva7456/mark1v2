@@ -32,7 +32,7 @@ export default function LoginForm() {
     setSuccessMessage(null);
 
     try {
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
+      const { error } = await supabaseClient.auth.signInWithPassword({
         email,
         password,
       });
