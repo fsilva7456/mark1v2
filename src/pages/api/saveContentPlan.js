@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase';
 
 /**
  * API route to save content plans to Supabase
+ * This endpoint creates content plans with null user_id to bypass RLS
  */
 export default async function handler(req, res) {
   // Only allow POST requests
@@ -17,6 +18,8 @@ export default async function handler(req, res) {
       title,
       user_id
     } = req.body;
+    
+    console.log('Received request to save content plan:', { strategy_id, title });
     
     // Validate required fields
     if (!strategy_id || !content_plan_text) {
@@ -41,6 +44,7 @@ export default async function handler(req, res) {
         
         if (strategyData) {
           finalUserId = strategyData.user_id;
+          console.log('Found user_id from strategy:', finalUserId);
         }
       } catch {
         console.log('Could not fetch strategy user_id, continuing with null');
@@ -49,16 +53,20 @@ export default async function handler(req, res) {
 
     // Insert the content plan as a public plan (null user_id)
     // This relies on a specific RLS policy to allow null user_id inserts
+    const contentPlan = { 
+      strategy_id,
+      special_considerations,
+      content_plan_text,
+      title: title || 'Content Plan',
+      user_id: null, // Force user_id to be null to work with public content RLS policy
+      status: 'active'
+    };
+    
+    console.log('Inserting content plan with:', contentPlan);
+    
     const { data, error } = await supabase
       .from('content_plans')
-      .insert([{ 
-        strategy_id,
-        special_considerations,
-        content_plan_text,
-        title: title || 'Content Plan',
-        user_id: null, // Force user_id to be null to work with public content RLS policy
-        status: 'active'
-      }])
+      .insert([contentPlan])
       .select();
 
     if (error) {
@@ -70,6 +78,8 @@ export default async function handler(req, res) {
       });
     }
 
+    console.log('Content plan saved successfully:', data[0].id);
+    
     // Return the saved content plan data
     return res.status(200).json({
       status: 'success',
