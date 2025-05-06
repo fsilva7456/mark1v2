@@ -1,0 +1,158 @@
+/* Content Plan Styling */
+
+.content-plan-display {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  color: #374151;
+}
+
+/* Main heading (Title) */
+.content-plan-display h1 {
+  font-size: 1.75rem;
+  color: #1a56db;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e5edff;
+  text-align: center;
+}
+
+/* Overall Theme */
+.content-plan-display h2 {
+  font-size: 1.4rem;
+  color: #2563eb;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  background-color: #f8fafc;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  text-align: center;
+}
+
+/* Flex container for weeks */
+.content-plan-display > h2 ~ * {
+  display: none; /* Hide all elements after h2 by default */
+}
+
+/* Create grid for the three weeks */
+.content-plan-display .weeks-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .content-plan-display .weeks-container {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  
+  .content-plan-display .week-card {
+    flex: 1;
+    min-width: 0; /* Allow shrinking below content size */
+  }
+}
+
+/* Week card styling */
+.content-plan-display .week-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+/* Week sections */
+.content-plan-display .week-card h3 {
+  font-size: 1.2rem;
+  color: #4f46e5;
+  background-color: #f5f7ff;
+  padding: 0.75rem 1rem;
+  margin: 0;
+  border-left: 4px solid #6366f1;
+}
+
+/* Week content */
+.content-plan-display .week-card .week-content {
+  background-color: #ffffff;
+  padding: 1rem 1.5rem;
+  flex-grow: 1;
+}
+
+/* List items (theme, objective, etc.) */
+.content-plan-display ul {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+  list-style-position: outside;
+}
+
+.content-plan-display li {
+  margin-bottom: 0.75rem;
+  list-style-type: none;
+  position: relative;
+  padding-left: 0.5rem;
+}
+
+.content-plan-display li::before {
+  content: "•";
+  color: #6366f1;
+  font-weight: bold;
+  font-size: 1.2rem;
+  position: absolute;
+  left: -1.2rem;
+  top: -0.125rem;
+}
+
+/* Bold text for keys */
+.content-plan-display strong {
+  color: #4b5563;
+  font-weight: 600;
+  display: inline-block;
+  min-width: 100px;
+}
+
+/* Special section styling */
+.content-plan-display p {
+  margin-bottom: 1rem;
+  line-height: 1.7;
+}
+
+/* Add space between sections */
+.content-plan-display hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px dashed #e5e7eb;
+}
+
+/* Color-coded weeks */
+.content-plan-display .week-card:nth-child(1) h3 {
+  border-left-color: #8b5cf6; /* Purple */
+}
+
+.content-plan-display .week-card:nth-child(2) h3 {
+  border-left-color: #3b82f6; /* Blue */
+}
+
+.content-plan-display .week-card:nth-child(3) h3 {
+  border-left-color: #10b981; /* Green */
+}
+
+/* Responsive adjustments */
+@media (max-width: 1023px) {
+  .content-plan-display {
+    padding: 0.5rem;
+  }
+  
+  .content-plan-display h1 {
+    font-size: 1.5rem;
+  }
+  
+  .content-plan-display h2 {
+    font-size: 1.25rem;
+  }
+  
+  .content-plan-display .week-card h3 {
+    font-size: 1.1rem;
+  }
+} 
