@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import LoginForm from './components/LoginForm';
 
 /**
@@ -15,7 +16,9 @@ export default function LoginPage() {
             Enter your credentials to access Mark1
           </p>
         </div>
-        <LoginForm />
+        <Suspense fallback={<div className="text-center py-4">Loading form...</div>}>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   );
