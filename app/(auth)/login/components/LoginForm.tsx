@@ -13,7 +13,7 @@ import Link from "next/link";
  */
 export default function LoginForm() {
   const searchParams = useSearchParams();
-  const registered = searchParams.get("registered");
+  const registered = searchParams?.get("registered") || null;
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
