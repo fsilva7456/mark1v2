@@ -19,12 +19,15 @@ export default function StrategyPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [result, setResult] = useState<{ text: string | null, error: string | null } | null>(null);
   const [parsedMatrix, setParsedMatrix] = useState<string | null>(null);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [isExplanationOpen, setIsExplanationOpen] = useState(false);
   const [strategyName, setStrategyName] = useState('');
   const [saveMessage, setSaveMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [feedback, setFeedback] = useState('');
+  const [updateMessage, setUpdateMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const matrixRef = useRef<HTMLDivElement>(null);
 
   // Apply styling to the matrix table after render
@@ -181,6 +184,64 @@ export default function StrategyPage() {
 
   const toggleExplanation = () => {
     setIsExplanationOpen(!isExplanationOpen);
+  };
+
+  const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setFeedback(e.target.value);
+  };
+
+  const handleUpdateStrategy = async () => {
+    if (!feedback.trim()) {
+      setUpdateMessage({
+        text: 'Please provide feedback to update the strategy.',
+        type: 'error'
+      });
+      return;
+    }
+
+    setIsUpdating(true);
+    setUpdateMessage(null);
+    
+    try {
+      // Build a prompt that includes the original strategy and the feedback
+      const updatePrompt = `
+I previously generated the following strategy: 
+
+${result?.text || ''}
+
+The user has provided the following feedback to improve or adjust the strategy:
+
+${feedback}
+
+Please update the strategy matrix based on this feedback. Keep the same format but incorporate the changes requested.
+Return the full, updated strategy matrix with explanation.
+`;
+      
+      // Use our client to generate the updated strategy
+      const response = await generateStrategy(updatePrompt);
+      
+      if (response.error) {
+        setUpdateMessage({
+          text: response.error,
+          type: 'error'
+        });
+      } else {
+        setResult(response);
+        setFeedback('');
+        setUpdateMessage({
+          text: 'Strategy updated successfully!',
+          type: 'success'
+        });
+      }
+    } catch (error) {
+      console.error('Error updating strategy:', error);
+      setUpdateMessage({
+        text: error instanceof Error ? error.message : 'Failed to update strategy',
+        type: 'error'
+      });
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -442,6 +503,39 @@ export default function StrategyPage() {
                   </div>
                 </div>
               )}
+
+              {/* Feedback section - NEW */}
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h3 className="text-xl font-semibold mb-4">Provide Feedback to Update Strategy</h3>
+                <div className="mb-4">
+                  <label htmlFor="feedback" className="block text-sm font-medium text-gray-700 mb-1">
+                    What would you like to change or improve about this strategy?
+                  </label>
+                  <textarea
+                    id="feedback"
+                    rows={4}
+                    value={feedback}
+                    onChange={handleFeedbackChange}
+                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., Could you focus more on digital marketing channels? I'd like more emphasis on retention strategies."
+                  />
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={handleUpdateStrategy}
+                  disabled={isUpdating || !feedback.trim()}
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-300"
+                >
+                  {isUpdating ? 'Updating...' : 'Update Strategy'}
+                </button>
+
+                {updateMessage && (
+                  <div className={`mt-4 p-3 rounded-md ${updateMessage.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {updateMessage.text}
+                  </div>
+                )}
+              </div>
 
               {/* Save strategy section */}
               <div className="mt-8 pt-6 border-t border-gray-200">
