@@ -360,8 +360,18 @@ Return the full, updated strategy matrix with explanation.
           <h2 className="text-2xl font-bold mb-4 text-center text-blue-700">Your Audience Targeting Matrix</h2>
           
           {result.error ? (
-            <div className="p-4 bg-red-100 text-red-700 rounded-md">
-              {result.error}
+            <div className="p-6 bg-red-50 text-red-700 rounded-md flex flex-col items-center">
+              <p className="mb-4 text-center">{result.error}</p>
+              {result.error.includes("AI service") && (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-300"
+                >
+                  {isSubmitting ? 'Retrying...' : 'Retry Generation'}
+                </button>
+              )}
             </div>
           ) : parsedMatrix ? (
             <div className="strategy-matrix">

@@ -4,7 +4,7 @@
  */
 
 const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000; // milliseconds
+const INITIAL_RETRY_DELAY = 2000; // milliseconds
 
 /**
  * Generate a strategy using the LLM API
@@ -31,7 +31,26 @@ export async function generateStrategy(prompt) {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`API error (${response.status}): ${errorText}`);
+        let errorObj;
+        
+        try {
+          errorObj = JSON.parse(errorText);
+        } catch (e) {
+          errorObj = { error: errorText };
+        }
+        
+        // Check for service overload errors specifically
+        const isServiceOverloaded = 
+          errorObj.error && 
+          (errorObj.error.includes("overloaded") || 
+           errorObj.error.includes("UNAVAILABLE") ||
+           errorObj.error.includes("503"));
+        
+        if (isServiceOverloaded) {
+          throw new Error("The AI service is currently busy. Please wait a moment and try again.");
+        } else {
+          throw new Error(`API error (${response.status}): ${errorText}`);
+        }
       }
 
       const data = await response.json();
@@ -45,17 +64,28 @@ export async function generateStrategy(prompt) {
       console.error(`Strategy generation error (attempt ${attempts}/${MAX_RETRIES}):`, error);
       lastError = error.message;
       
-      // If we have more retries left, wait before trying again
+      // If we have more retries left, wait before trying again with exponential backoff
       if (attempts < MAX_RETRIES) {
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * attempts));
+        const backoffTime = INITIAL_RETRY_DELAY * Math.pow(2, attempts - 1);
+        await new Promise(resolve => setTimeout(resolve, backoffTime));
       }
     }
   }
 
-  // If we've exhausted all retries, return with error
+  // Check if the error is about service overload and provide a user-friendly message
+  const isOverloadError = 
+    lastError && 
+    (lastError.includes("overloaded") || 
+     lastError.includes("busy") || 
+     lastError.includes("UNAVAILABLE") ||
+     lastError.includes("503"));
+  
+  // If we've exhausted all retries, return with appropriate error message
   return {
     text: null,
-    error: `Failed to generate strategy after ${MAX_RETRIES} attempts. Last error: ${lastError}`
+    error: isOverloadError 
+      ? "The AI service is currently experiencing high traffic. Please try again in a few moments."
+      : `Failed to generate strategy after ${MAX_RETRIES} attempts. Please try again later.`
   };
 }
 

@@ -78,7 +78,26 @@ async function callGeminiApi(prompt) {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+    try {
+      // Try to parse the error as JSON
+      const errorJson = JSON.parse(errorText);
+      
+      // Check for service overload errors
+      if (errorJson.error && 
+         (errorJson.error.status === "UNAVAILABLE" || 
+          errorJson.error.code === 503 ||
+          (errorJson.error.message && errorJson.error.message.includes("overloaded")))) {
+        throw new Error("The AI service is currently overloaded. Please try again later.");
+      }
+      
+      throw new Error(`Gemini API error (${response.status}): ${JSON.stringify(errorJson)}`);
+    } catch (e) {
+      // If it's not JSON or we've already formatted our error
+      if (e.message.includes("AI service")) {
+        throw e;
+      }
+      throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+    }
   }
 
   return await response.json();
@@ -110,30 +129,45 @@ export default async function handler(req, res) {
       startTime: Date.now(),
     });
 
-    // Call the Gemini API
-    const geminiResponse = await callGeminiApi(prompt);
-    
-    // Process the response
-    const text = processGeminiResponse(geminiResponse);
-    
-    // Update generation status
-    activeGenerations.set(requestId, {
-      status: 'completed',
-      progress: 100,
-      completionTime: Date.now(),
-    });
+    try {
+      // Call the Gemini API
+      const geminiResponse = await callGeminiApi(prompt);
+      
+      // Process the response
+      const text = processGeminiResponse(geminiResponse);
+      
+      // Update generation status
+      activeGenerations.set(requestId, {
+        status: 'completed',
+        progress: 100,
+        completionTime: Date.now(),
+      });
 
-    // After some time, clean up this generation record
-    setTimeout(() => {
-      activeGenerations.delete(requestId);
-    }, 3600000); // Clean up after 1 hour
+      // After some time, clean up this generation record
+      setTimeout(() => {
+        activeGenerations.delete(requestId);
+      }, 3600000); // Clean up after 1 hour
 
-    // Return the generated text
-    return res.status(200).json({
-      requestId,
-      text,
-      status: 'success'
-    });
+      // Return the generated text
+      return res.status(200).json({
+        requestId,
+        text,
+        status: 'success'
+      });
+    } catch (error) {
+      console.error('Strategy generation API error:', error);
+      
+      // Check if it's a service overload error
+      if (error.message && error.message.includes("overloaded")) {
+        return res.status(503).json({ 
+          error: "The AI service is currently experiencing high traffic. Please try again in a few moments.",
+          status: 'error',
+          serviceOverloaded: true
+        });
+      }
+      
+      throw error; // Re-throw for general error handling
+    }
   } catch (error) {
     console.error('Strategy generation error:', error);
     return res.status(500).json({ 
